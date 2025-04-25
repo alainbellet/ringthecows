@@ -5,6 +5,7 @@ class Bell {
   boolean isUp;
   boolean udpOutput;
   String myIP;
+  boolean notifyDown ;
 
   Bell(int id, int bellNumber) {
     //init constructor
@@ -13,6 +14,7 @@ class Bell {
     myBellNumber = bellNumber;
     isUp = false;
     udpOutput = false;
+    notifyDown = true;
   }
 
   public  void update() {
@@ -25,10 +27,14 @@ class Bell {
       isUp = false;
       cp5.get(Toggle.class, "toggleAlive"+myId).setColorBackground(redcolor);
       // LOG
-      //println(hour()+":"+minute()+":"+second()+" BOARD "+myId+" DOWN" );
+      if (debugConsole && notifyDown) {
+        println(hour()+":"+minute()+":"+second()+" BOARD "+myId+" DOWN" );
+        notifyDown = false;
+      }
     } else {
       cp5.get(Toggle.class, "toggleAlive"+myId).setColorBackground(greencolor);
       //println(hour()+":"+minute()+":"+second()+" BOARD "+myId+" UP" );
+      notifyDown = true;
     }
   }
 

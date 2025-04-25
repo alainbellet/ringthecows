@@ -143,7 +143,7 @@ class BellManager {
     cp5.get(Toggle.class, "toggle_midi").setState(false);
     cp5.get(Toggle.class, "toggle_debug_console").setState(true);
     cp5.get(Toggle.class, "toggle_log_midi").setState(true);
-    dropdownIP(0);
+    dropdownIP(1);
   }
 
   public void controlEvent(ControlEvent theEvent) {
