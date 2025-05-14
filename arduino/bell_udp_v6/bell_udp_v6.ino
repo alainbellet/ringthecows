@@ -3,23 +3,19 @@
   Firmware
   © Alain Bellet 2016
 
-  V8
+  V4
   --------------------------------------------------------------------------------------------- */
 
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
 #include <EEPROM.h> // for saving to EEPROM
-#include <Ticker.h> // for interupts ISR
 
 char ssid[] = "cowbell";    // your network SSID (name)
 char pass[] = "##bellbell##";  // your network password
-//char ssid[] = "zorro";    // your network SSID (name)
-//char pass[] = "Zampano1";  // your network password
-bool DEBUG_MODE = 1;
-const int FIRMWARE = 8;
+bool DEBUG_MODE = 0;
+const int FIRMWARE = 6;
 unsigned long milliseconds;
 unsigned long loopcount = 0;
-unsigned long seconds;
 
 // A UDP instance to let us send and receive packets over UDP
 WiFiClient client;
@@ -49,11 +45,6 @@ boolean useWifi = true; // turn off for other test to avoid connection trial
 int lastButtonState = 0;
 int buttonReading = 0;
 uint8_t *bssid;
-String bssid_last;
-Ticker tick_1sec;
-Ticker tick_500msec;
-unsigned long longPressTimer;
-boolean button_trigerred;
 
 // function prototypes to avoid compile errors
 void readEEPROM();
@@ -66,15 +57,11 @@ void handleMessage();
 void triggerBell();
 void tiltSwicth();
 void battery_level();
-void heartbeat();
-void isr_every_seconds();
-void isr_every_500milliseconds();
 
 // ## SETUP
 void setup() {
 
-  tick_1sec.attach_ms(1000, isr_every_seconds);
-  tick_500msec.attach_ms(500, isr_every_500milliseconds);
+
 
 
   if (DEBUG_MODE) {
@@ -106,9 +93,9 @@ void setup() {
   // Init other variables
   counter = 0;
 
-  //*******************************************
-  writeEEPROM(6); // write EEPROM for flashing change for every board
-  //*******************************************
+  // write EEPROM for flashing
+  writeEEPROM(8);
+
   delay (100);
   readEEPROM();
   delay (100);
@@ -136,37 +123,17 @@ void WIFIconnect() {
   //WiFi.setPhyMode(WIFI_PHY_MODE_11B);
   WiFi.begin(ssid, pass);
   // wait for connection
-  byte ledStatus = LOW;
-  int while_counter = 0;
-  while (while_counter < 5) {
+  while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
-    ledStatus = (ledStatus == HIGH) ? LOW : HIGH;
-    digitalWrite(2, ledStatus); // blue led blink
-    while_counter++;
-    if (WiFi.status() == WL_CONNECTED) {
-      digitalWrite(2, LOW); //ON
-      if (DEBUG_MODE) {
-        Serial.println("");
-        Serial.println("WiFi connected");
-        Serial.print("IP address: ");
-        Serial.println(WiFi.localIP());
-      }
-      break;
-    }
   }
-
-
-}
-
-void WIFIdisconnect() {
-  digitalWrite(2, HIGH); // blue led off
-  // Disconnect to WiFi network
+  digitalWrite(2, LOW); //ON
   if (DEBUG_MODE) {
-    Serial.print("Disconnect  WIFI - ");
+    Serial.println("");
+    Serial.println("WiFi connected");
+    Serial.print("IP address: ");
+    Serial.println(WiFi.localIP());
   }
-  //WiFi.mode(WIFI_STA); // station mode
-  WiFi.disconnect();
 
 }
 
@@ -189,31 +156,16 @@ void sendMessage(char data[], String type) {
 
   Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
 
-  //  if (DEBUG_MODE) {
-  //    Udp.write("#IP: ");
-  //    Udp.print(WiFi.localIP());
-  //    Udp.write("#DBm: ");
-  //    Udp.print(rssi);
-  //    Udp.write(" #drop: ");
-  //    Udp.print(lastdrop);
-  //    Udp.write(" #count: ");
-  //  }
-  if (type == "P") { //  ping back message
-    Udp.write("P,");
-    Udp.print(bellid);
-    Udp.write(",");
-    Udp.write("-");
+  if (DEBUG_MODE) {
+    Udp.write("#IP: ");
+    Udp.print(WiFi.localIP());
+    Udp.write("#DBm: ");
+    Udp.print(rssi);
+    Udp.write(" #drop: ");
+    Udp.print(lastdrop);
+    Udp.write(" #count: ");
   }
-  if (type == "T") { // movementTrigger state (tilt switch)
-    Udp.write("T,");
-    Udp.print(bellid);
-    Udp.write(",");
-    Udp.print(data);
-    Udp.write(",");
-    Udp.write("-");
-
-  }
-  if (type == "S") { // Status message
+  if (type = "S") { // Status message
     Udp.write("S,");
     Udp.print(WiFi.localIP());
     Udp.write(",");
@@ -223,27 +175,15 @@ void sendMessage(char data[], String type) {
     Udp.write(",");
     Udp.print(batterylevel);
     Udp.write(",");
-    Udp.print(bssid_last);
-    Udp.write(",");
     Udp.print(FIRMWARE);
     Udp.write(",");
-    Udp.write("-");
-
   }
-  if (type == "B") { // reply to bang recieved
+  if (type = "B") { // reply to bang recieved
     Udp.write("B");
   }
   //Udp.println(data);
   Udp.endPacket();
-
-  // if RSSI too low force disconect (experimental)
-
-  //  if (rssi < -80) {
-  //    //Serial.println(rssi);
-  //    WIFIdisconnect();
-  //  }
 }
-
 
 
 
@@ -254,44 +194,58 @@ void handleMessage(String data) {
   data = data.substring(1, data.length());
   //Serial.print("r: ");
   //Serial.println(data);
-  if (type == "P") { // Ping
-    sendMessage ("", "P"); // send Ping back
+  if (type == "A") { // Alive request for Status update
+    sendMessage ("", "S");
   }
   if (type == "B") { // Bang
     // turn movementTrigger off (must be better intagrated)
-    //movementTrigger = 0;
+    movementTrigger = 0;
     triggerBell();
     sendMessage ("", "B");
   }
-  if (type == "T") { // Tilt switch toggle
-    toggleMovementTrigger();
+  if (type == "T") { // Tilt switch activation
+    // turn movementTrigger off (must be better intagrated)
+    if (data == "1") {
+      movementTrigger = 1;
+      sendMessage ("", "S");
+    } else {
+      movementTrigger = 0;
+      sendMessage ("", "S");
+    }
+    if (type == "M") { // Mute
+      // turn movementTrigger off (must be better intagrated)
+      if (data == "1") {
+        bellmute = 1;
+        sendMessage ("", "S");
+      } else {
+        bellmute = 0;
+        sendMessage ("", "S");
+      }
 
-  }
+    }
 
-  if (type == "R") { // disconnect the wifi to force reconnect
-    WIFIdisconnect();
-  }
-  if (type == "S") { // Status request
-    sendMessage ("", "S");
-  }
+    if (data == "reset") {
+      counter = 0;
+      lastdrop = 0;
+    }
 
-  //Serial.print("l: ");
-  //Serial.println(counter);
-  // check for packet loss
-  //  if ((data.toInt() - counter) > lastdrop) {
-  //    Serial.print("drop");
-  //    Serial.println(data.toInt() - counter);
-  //    //sprintf(str, "%d", data.toInt()-counter);
-  //    //sendMessage(str);
-  //    lastdrop = data.toInt() - counter;
-  //  }
-  //  sprintf(str, "%d", counter);
-  //  //sendMessage(str);
-  //  sprintf(str, "%d", bellid);
-  //sendMessage (str, "A");
-  counter++;
+    //Serial.print("l: ");
+    //Serial.println(counter);
+    // check for packet loss
+    if ((data.toInt() - counter) > lastdrop) {
+      Serial.print("drop");
+      Serial.println(data.toInt() - counter);
+      //sprintf(str, "%d", data.toInt()-counter);
+      //sendMessage(str);
+      lastdrop = data.toInt() - counter;
+    }
+    sprintf(str, "%d", counter);
+    //sendMessage(str);
+    sprintf(str, "%d", bellid);
+    sendMessage (str, "A");
+    counter++;
+  }
 }
-
 void triggerBell() {
   // red LED
   digitalWrite(0, LOW);
@@ -308,29 +262,7 @@ void triggerBell() {
   }
 }
 
-void triggerMultipleBell(int nbr) {
-  for (int i = 0; i <= nbr; i++) {
-    // red LED
-    digitalWrite(0, LOW);
-    //if (bellmute == 0) {
-    // Solenoid PIN
-    digitalWrite(15, HIGH);
-    delay(30);
-    digitalWrite(0, HIGH);
-    digitalWrite(15, LOW);
-    delay(10);
-    //}
-    if (DEBUG_MODE) {
-      Serial.println("DING");
-    }
-  }
-}
-
-void heartbeat() {
-  sendMessage("", "H");
-}
-
-void tiltSwitch() {
+void tiltSwicth() {
   reading = digitalRead(12);
   if (DEBUG_MODE) {
     // Serial.println(reading);
@@ -343,22 +275,13 @@ void tiltSwitch() {
     if (DEBUG_MODE) {
       Serial.println("tilt activated");
     }
-    delay (300);
+    //delay (1000);
   }
 
 
 }
 
 void toggleMovementTrigger() {
-  if (movementTrigger == 1) {
-    movementTrigger = 0;
-    sendMessage ("0", "T");
-    //digitalWrite(0, HIGH);
-  } else {
-    movementTrigger = 1;
-    sendMessage ("1", "T");
-    //digitalWrite(0, LOW);
-  }
 
 }
 
@@ -371,16 +294,23 @@ void battery_level() {
   // this means our min analog read value should be 580 (3.14V)
   // and the max analog read value should be 774 (4.2V).
   int level = analogRead(A0);
-  //Serial.print("Analog pin: "); Serial.println(level);
+  Serial.print("Analog pin: "); Serial.println(level);
 
   // convert battery level to percent
   batterylevel = map(level, 580, 773, 0, 100);
 
   if (DEBUG_MODE) {
-    //Serial.print("Battery level: "); Serial.print(batterylevel); Serial.println("%");
+    Serial.print("Battery level: "); Serial.print(batterylevel); Serial.println("%");
   }
 
-
+  // Get BSSID (Mac from router)
+  bssid = WiFi.BSSID();
+  Serial.print("bssid ");
+  Serial.println(bssid[5], HEX);
+  // Get BSSID (Mac from router)
+  rssi = WiFi.RSSI();
+  Serial.print("rssi ");
+  Serial.println(rssi);
 
 }
 // ## EEPROM
@@ -427,27 +357,18 @@ void clearEEPROM() {
   delay(500);
 }
 
-void isr_every_seconds() {
-  // every 10 seconds
-  sendMessage ("", "S");
-  // every 5 seconds
-  if (seconds % 5) {
-    battery_level();
-    // Get BSSID (Mac from router)
-    bssid = WiFi.BSSID();
-    //Serial.print("bssid ");
-    bssid_last = String(bssid[5], HEX);
-  }
-  seconds = seconds + 1;
-}
-
-void isr_every_500milliseconds() {
-  heartbeat();
-}
-
 // #LOOP
 void loop() {
   milliseconds = millis();
+  if ((milliseconds % 10000) == 0 && milliseconds != saved_millis) {
+    battery_level();
+  }
+  // for Battery life test (activate solenoid every 200ms)
+  //  if ((milliseconds % 300) == 0 && milliseconds != saved_millis) {
+  //    triggerBell();
+  //  }
+
+
 
   if (DEBUG_MODE) {
     if (milliseconds - saved_millis > 1) {
@@ -457,43 +378,24 @@ void loop() {
   if (movementTrigger == 1) {
     if ((milliseconds % 100) == 0) {
       // check for tilt switch
-      tiltSwitch();
+      tiltSwicth();
     }
   }
   // check for switch
   buttonReading = digitalRead(13);
-  longPressTimer = 0;
-  button_trigerred = 0;
-  digitalWrite(2, LOW);
-  while (digitalRead(13) == HIGH)
-  {
-    delay(100);
-    longPressTimer++;
-    if (longPressTimer < 20 && button_trigerred == 0) {
-      button_trigerred = 1;
+  if (buttonReading != lastButtonState) {
+    if (buttonReading == HIGH) {
+      lastButtonState = 1;
+      if (DEBUG_MODE) {
+        Serial.println("button activated");
+      }
       triggerBell();
       delay(100);
-    } else if (longPressTimer == 25) {
-      // 2 seconds has passed, note that the button may still be down
-      ESP.deepSleep(0); // must use the hardware reset button to wake-up
-      break;
+    } else {
+      lastButtonState = 0;
+      delay(100);
     }
   }
-  //  if (buttonReading != lastButtonState) {
-  //    longPressTimer = 0;
-  //    if (buttonReading == HIGH) {
-  //
-  //      lastButtonState = 1;
-  //      if (DEBUG_MODE) {
-  //        Serial.println("button activated");
-  //      }
-  //      triggerBell();
-  //      delay(100);
-  //    } else {
-  //      lastButtonState = 0;
-  //      delay(100);
-  //    }
-  //  }
   // check if WIFI lost
   if (WiFi.status() != WL_CONNECTED && useWifi == true ) {
     if (DEBUG_MODE) {

@@ -111,6 +111,15 @@ class BellManager {
       .setColorBackground(greycolor)
       .setColorActive(greencolor)
       ;
+        // TOGGLE Deepsleep
+    cp5.addButton("deepsleep_all")
+      .setPosition(posX+ 650, posY)
+      .setSize(25, 30)
+      .setLabel("Z")
+      .plugTo(this)
+      .setColorBackground(greycolor)
+      .setColorActive(greencolor)
+      ;
     // Restart Wifi
     cp5.addButton("restart_wifi_all")
       .setPosition(posX+ 530, posY)
@@ -170,6 +179,12 @@ class BellManager {
 
       for (Bell bell : bells) {
         bell.sendToggleTilt();
+      }
+    }
+        if (theEvent.getController().getName().equals("deepsleep_all")) {
+
+      for (Bell bell : bells) {
+        bell.sendToggleDeepSleep();
       }
     }
     if (theEvent.getController().getName().equals("restart_wifi_all")) {

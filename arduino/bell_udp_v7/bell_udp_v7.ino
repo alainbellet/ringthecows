@@ -3,7 +3,7 @@
   Firmware
   © Alain Bellet 2016
 
-  V8
+  V4
   --------------------------------------------------------------------------------------------- */
 
 #include <ESP8266WiFi.h>
@@ -13,10 +13,8 @@
 
 char ssid[] = "cowbell";    // your network SSID (name)
 char pass[] = "##bellbell##";  // your network password
-//char ssid[] = "zorro";    // your network SSID (name)
-//char pass[] = "Zampano1";  // your network password
 bool DEBUG_MODE = 1;
-const int FIRMWARE = 8;
+const int FIRMWARE = 7;
 unsigned long milliseconds;
 unsigned long loopcount = 0;
 unsigned long seconds;
@@ -52,8 +50,6 @@ uint8_t *bssid;
 String bssid_last;
 Ticker tick_1sec;
 Ticker tick_500msec;
-unsigned long longPressTimer;
-boolean button_trigerred;
 
 // function prototypes to avoid compile errors
 void readEEPROM();
@@ -136,26 +132,17 @@ void WIFIconnect() {
   //WiFi.setPhyMode(WIFI_PHY_MODE_11B);
   WiFi.begin(ssid, pass);
   // wait for connection
-  byte ledStatus = LOW;
-  int while_counter = 0;
-  while (while_counter < 5) {
+  while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
-    ledStatus = (ledStatus == HIGH) ? LOW : HIGH;
-    digitalWrite(2, ledStatus); // blue led blink
-    while_counter++;
-    if (WiFi.status() == WL_CONNECTED) {
-      digitalWrite(2, LOW); //ON
-      if (DEBUG_MODE) {
-        Serial.println("");
-        Serial.println("WiFi connected");
-        Serial.print("IP address: ");
-        Serial.println(WiFi.localIP());
-      }
-      break;
-    }
   }
-
+  digitalWrite(2, LOW); //ON
+  if (DEBUG_MODE) {
+    Serial.println("");
+    Serial.println("WiFi connected");
+    Serial.print("IP address: ");
+    Serial.println(WiFi.localIP());
+  }
 
 }
 
@@ -238,10 +225,10 @@ void sendMessage(char data[], String type) {
 
   // if RSSI too low force disconect (experimental)
 
-  //  if (rssi < -80) {
-  //    //Serial.println(rssi);
-  //    WIFIdisconnect();
-  //  }
+//  if (rssi < -80) {
+//    //Serial.println(rssi);
+//    WIFIdisconnect();
+//  }
 }
 
 
@@ -462,38 +449,19 @@ void loop() {
   }
   // check for switch
   buttonReading = digitalRead(13);
-  longPressTimer = 0;
-  button_trigerred = 0;
-  digitalWrite(2, LOW);
-  while (digitalRead(13) == HIGH)
-  {
-    delay(100);
-    longPressTimer++;
-    if (longPressTimer < 20 && button_trigerred == 0) {
-      button_trigerred = 1;
+  if (buttonReading != lastButtonState) {
+    if (buttonReading == HIGH) {
+      lastButtonState = 1;
+      if (DEBUG_MODE) {
+        Serial.println("button activated");
+      }
       triggerBell();
       delay(100);
-    } else if (longPressTimer == 25) {
-      // 2 seconds has passed, note that the button may still be down
-      ESP.deepSleep(0); // must use the hardware reset button to wake-up
-      break;
+    } else {
+      lastButtonState = 0;
+      delay(100);
     }
   }
-  //  if (buttonReading != lastButtonState) {
-  //    longPressTimer = 0;
-  //    if (buttonReading == HIGH) {
-  //
-  //      lastButtonState = 1;
-  //      if (DEBUG_MODE) {
-  //        Serial.println("button activated");
-  //      }
-  //      triggerBell();
-  //      delay(100);
-  //    } else {
-  //      lastButtonState = 0;
-  //      delay(100);
-  //    }
-  //  }
   // check if WIFI lost
   if (WiFi.status() != WL_CONNECTED && useWifi == true ) {
     if (DEBUG_MODE) {

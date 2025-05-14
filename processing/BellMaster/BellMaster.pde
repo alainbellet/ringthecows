@@ -42,7 +42,7 @@ boolean logMidi = false;
 
 void setup() {
   background(30);
-  size(680, 810);
+  size(710, 810);
   frameRate(60);
   noSmooth(); 
 

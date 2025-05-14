@@ -4,7 +4,7 @@ public class UdpIOManager {
   String ip;
   int portIN;
   int portOUT;
-  
+
   UDP myUdp;  // define the UDP object
   int counter;
 
@@ -18,7 +18,7 @@ public class UdpIOManager {
     //myUdp.log( true );     // <-- printout the connection activity
     myUdp.listen( true );
 
-    message  = ""; 
+    message  = "";
     //IPArray = append(IPArray, "192.168.1.33");
     //IPArray = append(IPArray, "192.168.1.34");
     //IPArray = append(IPArray, "192.168.1.35");
@@ -44,8 +44,10 @@ public class UdpIOManager {
       String message = new String( data );
       String params[] = split(message, ",");
       // check for kind of message
-      //println("--"+message);
-      //println(params[0]);
+      if (debugConsole) {
+        // println("--"+message);
+        // println(params[0]);
+      }
 
 
       if (params[0].equals("S")) { // status message update
@@ -60,7 +62,7 @@ public class UdpIOManager {
         myBellManager.bells[id].setAutoMode(value);
         //println(params[1]);
       }
-      if (params[0].equals("P")) { // Ping back message 
+      if (params[0].equals("P")) { // Ping back message
         //println(message);
         //myBellManager.heartbeat(int params[2], params[1]);
         if (params.length > 1) {
@@ -94,9 +96,9 @@ public class UdpIOManager {
 
 
   /**
-   * Appends text to the end of a text file located in the data directory, 
+   * Appends text to the end of a text file located in the data directory,
    * creates the file if it does not exist.
-   * Can be used for big files with lots of rows, 
+   * Can be used for big files with lots of rows,
    * existing lines will not be rewritten
    */
   void appendTextToFile(String filename, String text) {
@@ -120,7 +122,7 @@ public class UdpIOManager {
   void createFile(File f) {
     File parentDir = f.getParentFile();
     try {
-      parentDir.mkdirs(); 
+      parentDir.mkdirs();
       f.createNewFile();
     }
     catch(Exception e) {

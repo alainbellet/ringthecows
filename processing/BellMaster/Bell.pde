@@ -153,6 +153,15 @@ class Bell {
       .setColorBackground(greycolor)
       .setColorActive(greencolor)
       ;
+    cp5.addButton("deepsleep"+myId)
+      .setPosition(originX+ 650, originY)
+      .setSize(25, 30)
+      .setId(myId)
+      .setLabel("Z")
+      .plugTo(this)
+      .setColorBackground(greycolor)
+      .setColorActive(greencolor)
+      ;
   }
 
   public void setStatus(String ip, int wifiquality, int batterylevel, String bssid, int firmware, int autoTrigger) {
@@ -226,6 +235,9 @@ class Bell {
     if (theEvent.getController().getName().equals("tilt"+myId)) {
       sendToggleTilt();
     }
+        if (theEvent.getController().getName().equals("deepsleep"+myId)) {
+      sendToggleDeepSleep();
+    }
   }
   public void sendToggleTilt() {
     //println("..");
@@ -234,6 +246,15 @@ class Bell {
     }
     myUdpIOManager.sendMessage("T", myIP);
   }
+
+  public void sendToggleDeepSleep() {
+    //println("..");
+    if (debugConsole) {
+      println("toggle Deeplsleep requested for "+myId +"("+myBellNumber+")");
+    }
+    myUdpIOManager.sendMessage("Z", myIP);
+  }
+
 
   public void sendRestartWifi() {
     if (debugConsole) {
