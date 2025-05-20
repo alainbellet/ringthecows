@@ -155,15 +155,6 @@ class Bell {
       .setColorBackground(greycolor)
       .setColorActive(greencolor)
       ;
-    cp5.addButton("deepsleep"+myId)
-      .setPosition(originX+ 650, originY)
-      .setSize(25, 30)
-      .setId(myId)
-      .setLabel("Z")
-      .plugTo(this)
-      .setColorBackground(greycolor)
-      .setColorActive(greencolor)
-      ;
   }
 
   public void setStatus(String ip, int wifiquality, int batterylevel, String bssid, int firmware, int autoTrigger) {
@@ -196,14 +187,14 @@ class Bell {
     //cp5.get(Toggle.class, "toggleAlive"+myId).setColorBackground(greencolor);
     //muteOutput(mute);
     myIP = ip;
-    
+
     // LOG for test
     /*csv_count_batt ++;
-    if (csv_count_batt % 100 == 0) {
-      String timeString = nf(hour(), 2) + ":" + nf(minute(), 2) + ":" + nf(second(), 2);
-      String csv = str(myId)+"," +timeString+ "," + str(batterylevel);
-      myUdpIOManager.appendTextToFile("battery_log_"+str(myId)+".csv", csv);
-    }*/
+     if (csv_count_batt % 100 == 0) {
+     String timeString = nf(hour(), 2) + ":" + nf(minute(), 2) + ":" + nf(second(), 2);
+     String csv = str(myId)+"," +timeString+ "," + str(batterylevel);
+     myUdpIOManager.appendTextToFile("battery_log_"+str(myId)+".csv", csv);
+     }*/
   }
   public void setAutoMode(int value) {
     if (value == 1) {
@@ -245,9 +236,6 @@ class Bell {
     if (theEvent.getController().getName().equals("tilt"+myId)) {
       sendToggleTilt();
     }
-        if (theEvent.getController().getName().equals("deepsleep"+myId)) {
-      sendToggleDeepSleep();
-    }
   }
   public void sendToggleTilt() {
     //println("..");
@@ -257,13 +245,6 @@ class Bell {
     myUdpIOManager.sendMessage("T", myIP);
   }
 
-  public void sendToggleDeepSleep() {
-    //println("..");
-    if (debugConsole) {
-      println("toggle Deeplsleep requested for "+myId +"("+myBellNumber+")");
-    }
-    myUdpIOManager.sendMessage("Z", myIP);
-  }
 
 
   public void sendRestartWifi() {

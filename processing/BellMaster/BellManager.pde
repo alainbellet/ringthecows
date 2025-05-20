@@ -29,9 +29,8 @@ class BellManager {
     bells[id].setStatus(ip, getWifiQuality(rssi), batterylevel, bssid, firmware, autoTrigger);
     //println(bssid);
     //String csv = str(csv_count)+","+str(id)+"," +ip+ "," + str(rssi)+","+ str(getWifiQuality(rssi));
-    
+
     //myUdpIOManager.appendTextToFile("rssi_log.csv", csv);
-    
   }
   public void heartbeat(int id, String ip) {
   }
@@ -104,12 +103,14 @@ class BellManager {
       .setLabel("LOG MIDI")
       .plugTo(this)
       ;
-    // TOGGLE SLEEP MODE FOR ALL BOARDS
-    cp5.addToggle("toggle_sleep")
-      .setPosition(630, 50)
-      .setSize(20, 20)
-      .setLabel("SLEEP BOARDS")
+    // CLEAR CONSOLE
+    cp5.addButton("clear_console")
+      .setPosition(180, 520)
+      .setSize(70, 20)
+      .setLabel("CLEAR CONSOLE")
       .plugTo(this)
+      .setColorBackground(greycolor)
+      .setColorActive(greencolor)
       ;
     // TOGGLE Auto
     cp5.addButton("tilt_all")
@@ -120,20 +121,31 @@ class BellManager {
       .setColorBackground(greycolor)
       .setColorActive(greencolor)
       ;
-    // TOGGLE Deepsleep
-    cp5.addButton("deepsleep_all")
-      .setPosition(posX+ 650, posY)
-      .setSize(25, 30)
-      .setLabel("Z")
-      .plugTo(this)
-      .setColorBackground(greycolor)
-      .setColorActive(greencolor)
-      ;
+
     // Restart Wifi
     cp5.addButton("restart_wifi_all")
       .setPosition(posX+ 530, posY)
       .setSize(25, 30)
       .setLabel("W")
+      .plugTo(this)
+      .setColorBackground(greycolor)
+      .setColorActive(greencolor)
+      ;
+
+    // BATTERY TITLE
+    cp5.addButton("battery_title")
+      .setPosition(posX+ 560, posY)
+      .setSize(25, 30)
+      .setLabel("B")
+      .plugTo(this)
+      .setColorBackground(greycolor)
+      .setColorActive(greencolor)
+      ;
+    // FIRMWARE TITLE
+    cp5.addButton("firmware_title")
+      .setPosition(posX+ 590, posY)
+      .setSize(25, 30)
+      .setLabel("F")
       .plugTo(this)
       .setColorBackground(greycolor)
       .setColorActive(greencolor)
@@ -184,27 +196,13 @@ class BellManager {
         toggleMidi(false);
       }
     }
-    if (theEvent.getController().getName().equals("toggle_sleep")) {
-      if (theEvent.getController().getValue() == 1) {
-        println("SLEEP MODE ON" );
-        sleepModeOn = true;
-      } else {
-        println("SLEEP MODE OFF (waiting for boards to wake up)" );
-        sleepModeOn = false;
-      }
-    }
     if (theEvent.getController().getName().equals("tilt_all")) {
 
       for (Bell bell : bells) {
         bell.sendToggleTilt();
       }
     }
-    if (theEvent.getController().getName().equals("deepsleep_all")) {
 
-      for (Bell bell : bells) {
-        bell.sendToggleDeepSleep();
-      }
-    }
     if (theEvent.getController().getName().equals("restart_wifi_all")) {
 
       for (Bell bell : bells) {
@@ -230,6 +228,11 @@ class BellManager {
         logMidi = false;
         println("Log MIDI OFF");
       }
+    }
+    
+    if (theEvent.getController().getName().equals("clear_console")) {
+
+      console.clear();
     }
   }
   public void toggleMidi(boolean val) {

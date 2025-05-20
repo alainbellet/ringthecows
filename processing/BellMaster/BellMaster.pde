@@ -124,10 +124,10 @@ void draw() {
   }
   if (frameCount % 20 == 0) {// have to be done less often // changed it was 60 in fribourg
     myUdpIOManager.sendBroadcastMessage("P");
-    if (sleepModeOn == true) {
+    /*if (sleepModeOn == true) {
       //println("send ZZZ" );
       myUdpIOManager.sendBroadcastMessage("Z");
-    }
+    }*/
   }
   if (frameCount % 300 == 0) {// have to be done less often
     myUdpIOManager.sendBroadcastMessage("S");
