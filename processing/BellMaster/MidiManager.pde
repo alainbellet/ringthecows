@@ -23,11 +23,15 @@ public class MidiManager {
     //mymididevice = RWMidi.getInputDevices()[1].createInput(this); // select device
     mymididevice = RWMidi.getInputDevices()[good_midi_input].createInput(this); // select device
     println ("SELECTED MIDI INPUT : " + good_midi_input + " - " + good_midi_input_name);
+    println ("MIDI CHANNEL : 2");
   }
   //Note ON recieved
   public void noteOnReceived(Note myreceivednote) {
     //println("note on " + myreceivednote.getChannel() + "  " + myreceivednote.getPitch()+ "  " + myreceivednote.getVelocity());
+    if (myreceivednote.getChannel() == channel - 1){ // we make -1 because channel index start at 0 in library...
+      // limit to messages from channel 2
     myBellManager.playNote(myreceivednote.getPitch());
+    }
   }
 
   // Note Off recieved

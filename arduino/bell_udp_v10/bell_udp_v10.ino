@@ -14,11 +14,8 @@
 char ssid[] = "cowbell";       // your network SSID (name)
 char pass[] = "##bellbell##";  // your network password
 
-// for saving into EEPROM
-const int BOARD_ID = -1;  // set it to -1 for not writting EEPROM
-//
-bool DEBUG_MODE = 0;
-const int FIRMWARE = 9;
+bool DEBUG_MODE = 1;
+const int FIRMWARE = 10;
 const int RED_LED_PIN = 0;
 const int BLUE_LED_PIN = 2;
 const int SOLENOID_PIN = 15;
@@ -120,9 +117,7 @@ void setup() {
 
   //*******************************************
   EEPROM.begin(512);
-  if (BOARD_ID != -1) {
-    writeEEPROM(BOARD_ID);  // write EEPROM for flashing change for every board, comment when done
-  }
+  writeEEPROM(1);  // write EEPROM for flashing change for every board, comment when done
   readEEPROM();
   EEPROM.end();
   //*******************************************

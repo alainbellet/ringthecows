@@ -14,7 +14,7 @@ import java.util.*;
 import rwmidi.*;
 
 ControlP5 cp5;
-MidiInput mymididevice; 
+MidiInput mymididevice;
 String[] IPArray = new String[0];
 int greycolor = color(50, 50, 50);
 int redcolor = color(255, 0, 0);
@@ -32,6 +32,7 @@ UdpIOManager myUdpIOManager;
 MidiManager myMidiManager;
 Textarea myTextarea; // for console
 Println console; // for console
+boolean sleepModeOn = false;
 
 boolean debugConsole = false;
 boolean logMidi = false;
@@ -44,7 +45,7 @@ void setup() {
   background(30);
   size(710, 810);
   frameRate(60);
-  noSmooth(); 
+  noSmooth();
 
   //PFont font = createFont("verdana", 14, true); // suppimé pour optimistaion mémoire
   //textFont(font);  // suppimé pour optimistaion mémoire
@@ -62,12 +63,12 @@ void setup() {
   console = cp5.addConsole(myTextarea);//
   console.setMax(15);
   myTextlabel = cp5.addTextlabel("label")
-                    .setText("BELL MASTER 1.2 / RING THE COWS KLANGWELT")
-                    .setPosition(410,20)
-                    .setColorValue(0xffffffff)
-                    ;
-  
-                    
+    .setText("BELL MASTER 1.2 / RING THE COWS KLANGWELT")
+    .setPosition(410, 20)
+    .setColorValue(0xffffffff)
+    ;
+
+
   myUdpIOManager = new UdpIOManager();
 
   myBellManager = new BellManager();
@@ -117,12 +118,16 @@ void keyPressed() {
 }
 
 void draw() {
-  
+
   if (frameCount % 5 == 0) {// have to be done less often
     myBellManager.update();
   }
   if (frameCount % 20 == 0) {// have to be done less often // changed it was 60 in fribourg
     myUdpIOManager.sendBroadcastMessage("P");
+    if (sleepModeOn == true) {
+      //println("send ZZZ" );
+      myUdpIOManager.sendBroadcastMessage("Z");
+    }
   }
   if (frameCount % 300 == 0) {// have to be done less often
     myUdpIOManager.sendBroadcastMessage("S");

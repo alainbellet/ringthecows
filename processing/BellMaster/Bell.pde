@@ -6,6 +6,7 @@ class Bell {
   boolean udpOutput;
   String myIP;
   boolean notifyDown ;
+  int csv_count_batt;
 
   Bell(int id, int bellNumber) {
     //init constructor
@@ -15,6 +16,7 @@ class Bell {
     isUp = false;
     udpOutput = false;
     notifyDown = true;
+    csv_count_batt = 0;
   }
 
   public  void update() {
@@ -194,6 +196,14 @@ class Bell {
     //cp5.get(Toggle.class, "toggleAlive"+myId).setColorBackground(greencolor);
     //muteOutput(mute);
     myIP = ip;
+    
+    // LOG for test
+    /*csv_count_batt ++;
+    if (csv_count_batt % 100 == 0) {
+      String timeString = nf(hour(), 2) + ":" + nf(minute(), 2) + ":" + nf(second(), 2);
+      String csv = str(myId)+"," +timeString+ "," + str(batterylevel);
+      myUdpIOManager.appendTextToFile("battery_log_"+str(myId)+".csv", csv);
+    }*/
   }
   public void setAutoMode(int value) {
     if (value == 1) {

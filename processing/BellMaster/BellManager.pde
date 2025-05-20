@@ -28,8 +28,10 @@ class BellManager {
     csv_count++;
     bells[id].setStatus(ip, getWifiQuality(rssi), batterylevel, bssid, firmware, autoTrigger);
     //println(bssid);
-    String csv = str(csv_count)+","+str(id)+"," +ip+ "," + str(rssi)+","+ str(getWifiQuality(rssi));
+    //String csv = str(csv_count)+","+str(id)+"," +ip+ "," + str(rssi)+","+ str(getWifiQuality(rssi));
+    
     //myUdpIOManager.appendTextToFile("rssi_log.csv", csv);
+    
   }
   public void heartbeat(int id, String ip) {
   }
@@ -102,6 +104,13 @@ class BellManager {
       .setLabel("LOG MIDI")
       .plugTo(this)
       ;
+    // TOGGLE SLEEP MODE FOR ALL BOARDS
+    cp5.addToggle("toggle_sleep")
+      .setPosition(630, 50)
+      .setSize(20, 20)
+      .setLabel("SLEEP BOARDS")
+      .plugTo(this)
+      ;
     // TOGGLE Auto
     cp5.addButton("tilt_all")
       .setPosition(posX+ 620, posY)
@@ -111,7 +120,7 @@ class BellManager {
       .setColorBackground(greycolor)
       .setColorActive(greencolor)
       ;
-        // TOGGLE Deepsleep
+    // TOGGLE Deepsleep
     cp5.addButton("deepsleep_all")
       .setPosition(posX+ 650, posY)
       .setSize(25, 30)
@@ -175,13 +184,22 @@ class BellManager {
         toggleMidi(false);
       }
     }
+    if (theEvent.getController().getName().equals("toggle_sleep")) {
+      if (theEvent.getController().getValue() == 1) {
+        println("SLEEP MODE ON" );
+        sleepModeOn = true;
+      } else {
+        println("SLEEP MODE OFF (waiting for boards to wake up)" );
+        sleepModeOn = false;
+      }
+    }
     if (theEvent.getController().getName().equals("tilt_all")) {
 
       for (Bell bell : bells) {
         bell.sendToggleTilt();
       }
     }
-        if (theEvent.getController().getName().equals("deepsleep_all")) {
+    if (theEvent.getController().getName().equals("deepsleep_all")) {
 
       for (Bell bell : bells) {
         bell.sendToggleDeepSleep();
