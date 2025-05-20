@@ -17,7 +17,7 @@ char pass[] = "##bellbell##";  // your network password
 // for saving into EEPROM
 const int BOARD_ID = -1;  // set it to -1 for not writting EEPROM
 //
-bool DEBUG_MODE = 0;
+bool DEBUG_MODE = 1;
 const int FIRMWARE = 9;
 const int RED_LED_PIN = 0;
 const int BLUE_LED_PIN = 2;
@@ -157,7 +157,7 @@ void WIFIconnect() {
   byte ledStatus = LOW;
   int while_counter = 0;
   // Try to connect for a limited time
-  while (while_counter < 20) {
+  while (while_counter < 30) {
     delay(20);
     if (DEBUG_MODE) {
       Serial.print("wifi try ");
@@ -166,7 +166,7 @@ void WIFIconnect() {
     delay(20);
     ledStatus = (ledStatus == HIGH) ? LOW : HIGH;
     digitalWrite(BLUE_LED_PIN, ledStatus);  // blue led blink
-    while_counter++;
+
     if (WiFi.status() == WL_CONNECTED) {
       digitalWrite(BLUE_LED_PIN, LOW);  // ON
       lastWifiConnectTime = millis();
@@ -180,7 +180,14 @@ void WIFIconnect() {
         Serial.println(WiFi.RSSI());
       }
       break;
+    }else if (while_counter == 29){
+      // reboot the board
+      if (DEBUG_MODE) {
+        Serial.println("Board will reboot... ");
+      }
+      ESP.restart();
     }
+    while_counter++;
     delay(500);
   }
 }

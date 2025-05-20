@@ -47,5 +47,5 @@ void triggerBell() {
 // #LOOP
 void loop() {
   triggerBell();
-  delay(300);
+  delay(150);
 }
